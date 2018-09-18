@@ -8,7 +8,15 @@
 
 import UIKit
 
+protocol ViewControllerDelegate: class {
+    func didFinishAnimation()
+}
+
 class ViewController: UIViewController {
+    
+    var delegate: ViewControllerDelegate?
+    
+    var isAnimating: Bool = false
     
     let titleLabel: UILabel = {
         let label = UILabel()
@@ -38,7 +46,8 @@ class ViewController: UIViewController {
     }
     
     @objc func handleTap(sender: UITapGestureRecognizer) {
-        if sender.state == .ended {
+        if sender.state == .ended && !isAnimating {
+            isAnimating = true
             UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
                 self.titleLabel.transform = CGAffineTransform(translationX: -30, y: 0)
             }) { (_) in
@@ -54,7 +63,10 @@ class ViewController: UIViewController {
                 UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
                     self.bodyLabel.alpha = 0
                     self.bodyLabel.transform = self.titleLabel.transform.translatedBy(x: 0, y: -150)
-                })
+                }) { (_) in
+                    self.delegate?.didFinishAnimation()
+                    self.isAnimating = false
+                }
             }
         }
     }
