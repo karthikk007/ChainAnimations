@@ -18,6 +18,8 @@ class ViewController: UIViewController {
     
     var isAnimating: Bool = false
     
+    var itemIndex: Int = 0
+    
     let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Welcome to Chain Animations"
@@ -34,6 +36,26 @@ class ViewController: UIViewController {
         label.textColor = .white
         return label
     }()
+    
+    lazy var tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
+    
+    override func viewDidAppear(_ animated: Bool) {
+        view.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        view.removeGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        titleLabel.transform = .identity
+        titleLabel.alpha = 1
+        
+        bodyLabel.transform = .identity
+        bodyLabel.alpha = 1
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,8 +63,6 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         view.backgroundColor = .black
         setupStackView()
-
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:))))
     }
     
     @objc func handleTap(sender: UITapGestureRecognizer) {

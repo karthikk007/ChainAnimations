@@ -10,13 +10,23 @@ import UIKit
 
 class HomeViewController: UIPageViewController {
     
-    let pageCount = 5
+    var pages: [UIViewController] = {
+       return [ViewController(), ViewController(), ViewController(), ViewController(), ViewController()]
+    }()
+    
+    var info: [[String]] = [["Welcome", "Hi Karthik!\nThanks for downloading our application."],
+                            ["Awesome People", "We work hard every day to make sure you don't have to."],
+                            ["Mission Statement", "Here at company XXX, no stone is left unturned when looking for the BEST Situations."],
+                            ["Leave us a message", "Don't forget to leave us feedback on what you'd like to see in the future!\n\nContact: \nkarthik_k_007@yahoo.co.in"],
+                            ["Welcome to Chain Animations", "Thanks so much for downloading our brand new app and giving us a try.\n\n😘😘😘"]]
+    
+    var pendingIndex: Int = -1
     
     lazy var pageControl: UIPageControl = {
         let controlFrame = CGRect(x: 0, y: UIScreen.main.bounds.height - 50, width: UIScreen.main.bounds.width, height: 50)
         let pageControl = UIPageControl(frame: controlFrame)
-        pageControl.numberOfPages = pageCount
-        pageControl.currentPage = 1
+        pageControl.numberOfPages = pages.count
+        pageControl.currentPage = pendingIndex
         pageControl.tintColor = .white
         pageControl.pageIndicatorTintColor = .white
         pageControl.currentPageIndicatorTintColor = .red
@@ -31,11 +41,26 @@ class HomeViewController: UIPageViewController {
         self.delegate = self
         
         addPageControls()
+        preparePages()
         displayPage()
     }
     
     private func addPageControls() {
         view.addSubview(pageControl)
+    }
+    
+    func preparePages() {
+        for (index, page) in pages.enumerated() {
+            if let page = page as? ViewController{
+                let title = info[index][0]
+                let body = info[index][1]
+                
+                page.itemIndex = index
+                page.titleLabel.text = title
+                page.bodyLabel.text = body
+                page.delegate = self
+            }
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -44,15 +69,17 @@ class HomeViewController: UIPageViewController {
     }
     
     func displayPage() {
-        let vc = ViewController()
-        vc.delegate = self
-        setViewControllers([vc], direction: .forward, animated: true) { (_) in
-            self.updateCurrentPage()    
+        let index = (pendingIndex + 1) % pages.count
+        if let vc = pages[index] as? ViewController {
+            setViewControllers([vc], direction: .forward, animated: true) { (_) in
+                self.pendingIndex = index
+                self.updateCurrentPage()
+            }
         }
     }
     
     func updateCurrentPage() {
-        self.pageControl.currentPage = (self.pageControl.currentPage + 1) % self.pageCount
+        pageControl.currentPage = pendingIndex
     }
     
 
@@ -70,19 +97,35 @@ class HomeViewController: UIPageViewController {
 
 extension HomeViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        let vc = ViewController()
-        return vc
+        if let vc = viewController as? ViewController {
+            if vc.itemIndex > 0 {
+               return pages[vc.itemIndex - 1]
+            }
+        }
+        
+        return pages.last
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        let vc = ViewController()
-        return vc
+        if let vc = viewController as? ViewController {
+            if vc.itemIndex + 1 < pages.count {
+                return pages[vc.itemIndex + 1]
+            }
+        }
+        
+        return pages.first
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        updateCurrentPage()
+        if completed {
+            self.pageControl.currentPage = pendingIndex
+        }
     }
-    
+
+    func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) {
+        pendingIndex = (pendingViewControllers.first as? ViewController)?.itemIndex ?? 0
+        print(pendingIndex)
+    }
 }
 
 extension HomeViewController: ViewControllerDelegate {
